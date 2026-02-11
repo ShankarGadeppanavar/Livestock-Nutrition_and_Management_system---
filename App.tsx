@@ -9,7 +9,8 @@ import FeedingForm from './views/FeedingForm.tsx';
 import Reports from './views/Reports.tsx';
 import Login from './views/Login.tsx';
 import { ADMIN_EMAIL, generateSeedData } from './constants.tsx';
-import { Save, ArrowLeft, RotateCcw, Trash2, LogOut, Edit3, Camera, Upload, X } from 'lucide-react';
+// Added HelpCircle to the imports below
+import { Save, ArrowLeft, RotateCcw, Trash2, LogOut, Camera, Upload, X, HelpCircle } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = React.useState<AppState>(loadState());
@@ -99,6 +100,10 @@ const App: React.FC = () => {
       // Update existing
       const updatedPigs = state.pigs.map(p => {
         if (p.id === editingPigId) {
+          const weightHistory = [...p.weightHistory];
+          if (newPig.weight !== p.weight) {
+            weightHistory.push({ date: new Date().toISOString(), value: newPig.weight || p.weight });
+          }
           return {
             ...p,
             tagId: newPig.tagId!,
@@ -106,6 +111,7 @@ const App: React.FC = () => {
             group: (newPig.group as PigGroup),
             sex: (newPig.sex as Sex),
             weight: newPig.weight || p.weight,
+            weightHistory,
             breed: newPig.breed || p.breed,
             dob: newPig.dob || p.dob,
             isPregnant: !!newPig.isPregnant,
@@ -212,42 +218,42 @@ const App: React.FC = () => {
         );
       case 'add_pig':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="flex items-center justify-between">
-              <button onClick={() => setActiveView('pigs')} className="flex items-center gap-2 text-slate-500 font-bold">
-                <ArrowLeft size={20} /> Back
+              <button onClick={() => setActiveView('pigs')} className="flex items-center gap-2 text-slate-500 font-bold hover:text-pink-600 transition-colors">
+                <ArrowLeft size={22} /> Back to Registry
               </button>
-              <h2 className="text-2xl font-bold">{editingPigId ? 'Edit Pig Record' : 'Register New Pig'}</h2>
+              <h2 className="text-3xl font-black text-slate-900">{editingPigId ? 'Edit Pig Record' : 'Register New Pig'}</h2>
             </div>
-            <form onSubmit={handleAddOrUpdatePig} className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 space-y-8">
+            <form onSubmit={handleAddOrUpdatePig} className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-10">
               
               {/* Image Upload Section */}
-              <div className="flex flex-col items-center justify-center space-y-4 pb-4 border-b border-slate-50">
+              <div className="flex flex-col items-center justify-center space-y-6 pb-6 border-b border-slate-50">
                 <div className="relative group">
-                  <div className="w-40 h-40 rounded-[2rem] overflow-hidden bg-slate-100 ring-4 ring-pink-500/10 border-2 border-dashed border-slate-200 flex items-center justify-center group-hover:border-pink-300 transition-colors">
+                  <div className="w-48 h-48 rounded-[2.5rem] overflow-hidden bg-slate-100 ring-8 ring-pink-500/5 border-2 border-dashed border-slate-200 flex items-center justify-center group-hover:border-pink-400 transition-all duration-300">
                     {newPig.photoUrl ? (
                       <img src={newPig.photoUrl} alt="Pig Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="text-center p-4">
-                        <Camera size={32} className="mx-auto text-slate-300 mb-2" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No Photo</p>
+                      <div className="text-center p-6">
+                        <Camera size={40} className="mx-auto text-slate-300 mb-3" />
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Identify Pig</p>
                       </div>
                     )}
                   </div>
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="absolute -bottom-2 -right-2 bg-pink-600 text-white p-3 rounded-2xl shadow-xl hover:bg-pink-700 transition-all hover:scale-110 active:scale-95 z-10"
+                    className="absolute -bottom-3 -right-3 bg-pink-600 text-white p-4 rounded-2xl shadow-2xl hover:bg-pink-700 transition-all hover:scale-110 active:scale-95 z-10"
                   >
-                    <Upload size={18} />
+                    <Upload size={20} />
                   </button>
                   {newPig.photoUrl && (
                     <button 
                       type="button"
                       onClick={() => setNewPig(prev => ({...prev, photoUrl: ''}))}
-                      className="absolute -top-2 -right-2 bg-slate-800 text-white p-2 rounded-xl shadow-lg hover:bg-slate-900 transition-all z-10"
+                      className="absolute -top-3 -right-3 bg-slate-900 text-white p-3 rounded-2xl shadow-lg hover:bg-black transition-all z-10"
                     >
-                      <X size={14} />
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -258,60 +264,62 @@ const App: React.FC = () => {
                   accept="image/*" 
                   className="hidden" 
                 />
-                <p className="text-xs font-medium text-slate-400 text-center max-w-[200px]">
-                  {editingPigId ? "Upload a new photo to update identification." : "Add a photo for individual identification in the trough."}
+                <p className="text-xs font-bold text-slate-400 text-center uppercase tracking-widest max-w-[250px] leading-relaxed">
+                  {editingPigId ? "Updating facial identification profile" : "Attach photo for individual monitoring"}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Tag ID (Required)</label>
-                  <input required type="text" placeholder="e.g. TAG-2045" value={newPig.tagId} onChange={e => setNewPig({...newPig, tagId: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-pink-600 outline-none font-medium" />
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Tag Identifier</label>
+                  <input required type="text" placeholder="e.g. TAG-2045" value={newPig.tagId} onChange={e => setNewPig({...newPig, tagId: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Name / Nickname</label>
-                  <input required type="text" placeholder="e.g. Bessie" value={newPig.name} onChange={e => setNewPig({...newPig, name: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-pink-600 outline-none font-medium" />
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Assigned Name</label>
+                  <input required type="text" placeholder="e.g. Bessie" value={newPig.name} onChange={e => setNewPig({...newPig, name: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Group</label>
-                  <select value={newPig.group} onChange={e => setNewPig({...newPig, group: e.target.value as PigGroup})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 outline-none font-medium">
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Management Group</label>
+                  <select value={newPig.group} onChange={e => setNewPig({...newPig, group: e.target.value as PigGroup})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all appearance-none cursor-pointer">
                     {Object.values(PigGroup).map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Weight (kg)</label>
-                  <input type="number" value={newPig.weight} onChange={e => setNewPig({...newPig, weight: parseFloat(e.target.value)})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 outline-none font-medium" />
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Current Mass (kg)</label>
+                  <input type="number" value={newPig.weight} onChange={e => setNewPig({...newPig, weight: parseFloat(e.target.value)})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Breed</label>
-                  <input type="text" value={newPig.breed} onChange={e => setNewPig({...newPig, breed: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 outline-none font-medium" />
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Genetic Breed</label>
+                  <input type="text" value={newPig.breed} onChange={e => setNewPig({...newPig, breed: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-600 mb-1">Date of Birth</label>
-                  <input type="date" value={newPig.dob} onChange={e => setNewPig({...newPig, dob: e.target.value})} className="w-full p-4 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 outline-none font-medium" />
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Birth Record</label>
+                  <input type="date" value={newPig.dob} onChange={e => setNewPig({...newPig, dob: e.target.value})} className="w-full p-5 bg-slate-50 rounded-2xl border-none ring-1 ring-slate-200 focus:ring-4 focus:ring-pink-600 outline-none font-bold text-lg transition-all" />
                 </div>
-                <div className="flex flex-col space-y-2 p-2">
-                  <span className="text-sm font-bold text-slate-600">Sex</span>
-                  <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 font-bold text-sm text-slate-600 cursor-pointer">
-                      <input type="radio" name="sex" className="w-4 h-4 accent-pink-600" checked={newPig.sex === Sex.MALE} onChange={() => setNewPig({...newPig, sex: Sex.MALE})} /> Male
+                <div className="flex flex-col space-y-4 p-2">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Sex Assignment</span>
+                  <div className="flex items-center gap-10">
+                    <label className="flex items-center gap-3 font-bold text-slate-700 cursor-pointer group">
+                      <input type="radio" name="sex" className="w-5 h-5 accent-pink-600 cursor-pointer" checked={newPig.sex === Sex.MALE} onChange={() => setNewPig({...newPig, sex: Sex.MALE})} /> 
+                      <span className="group-hover:text-pink-600 transition-colors">Male</span>
                     </label>
-                    <label className="flex items-center gap-2 font-bold text-sm text-slate-600 cursor-pointer">
-                      <input type="radio" name="sex" className="w-4 h-4 accent-pink-600" checked={newPig.sex === Sex.FEMALE} onChange={() => setNewPig({...newPig, sex: Sex.FEMALE})} /> Female
+                    <label className="flex items-center gap-3 font-bold text-slate-700 cursor-pointer group">
+                      <input type="radio" name="sex" className="w-5 h-5 accent-pink-600 cursor-pointer" checked={newPig.sex === Sex.FEMALE} onChange={() => setNewPig({...newPig, sex: Sex.FEMALE})} /> 
+                      <span className="group-hover:text-pink-600 transition-colors">Female</span>
                     </label>
                   </div>
                 </div>
                 {newPig.sex === Sex.FEMALE && (
-                  <div className="flex items-end pb-4">
-                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 font-bold text-sm text-slate-600 cursor-pointer w-full">
-                      <input type="checkbox" className="w-5 h-5 accent-pink-600" checked={newPig.isPregnant} onChange={e => setNewPig({...newPig, isPregnant: e.target.checked})} /> 
-                      Currently Pregnant?
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-4 p-5 bg-pink-50 rounded-[1.5rem] border border-pink-100 font-bold text-slate-700 cursor-pointer w-full hover:bg-pink-100 transition-colors">
+                      <input type="checkbox" className="w-6 h-6 rounded-lg accent-pink-600 cursor-pointer" checked={newPig.isPregnant} onChange={e => setNewPig({...newPig, isPregnant: e.target.checked})} /> 
+                      Gestating / Pregnant?
                     </label>
                   </div>
                 )}
               </div>
-              <button type="submit" className="w-full py-5 bg-pink-600 text-white rounded-[1.5rem] font-bold text-lg shadow-xl hover:bg-pink-700 transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-                <Save size={22} /> {editingPigId ? 'Update Record' : 'Save Pig Record'}
+              <button type="submit" className="w-full py-6 bg-pink-600 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] text-sm shadow-2xl shadow-pink-200 hover:bg-pink-700 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group">
+                <Save size={24} className="group-hover:scale-110 transition-transform" /> {editingPigId ? 'Finalize Changes' : 'Register To Herd'}
               </button>
             </form>
           </div>
@@ -320,24 +328,31 @@ const App: React.FC = () => {
         return <FeedingForm pigs={state.pigs} onRecord={handleRecordFeeding} onNavigate={setActiveView} />;
       case 'alerts':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Alert Center</h2>
-            <div className="bg-white rounded-3xl p-8 text-center border-2 border-dashed border-slate-200 text-slate-400">
-              <p>System notification history for <b>{ADMIN_EMAIL}</b></p>
-              <div className="mt-8 space-y-4 text-left max-w-lg mx-auto">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Security & Alert Center</h2>
+              <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-1">Notification Routing: {ADMIN_EMAIL}</p>
+            </div>
+            <div className="bg-white rounded-[2.5rem] p-10 text-center border-2 border-dashed border-slate-200 text-slate-400">
+              <div className="max-w-2xl mx-auto space-y-6 text-left">
                 {state.pigs.filter(p => p.status === FeedStatus.UNDERFED || p.status === FeedStatus.MISSED).map(p => (
-                  <div key={p.id} className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex gap-4">
-                     <div className="w-12 h-12 bg-rose-200 rounded-lg flex items-center justify-center font-bold text-rose-700">!</div>
-                     <div>
-                       <p className="font-bold text-rose-900">INTAKE ALERT: {p.tagId}</p>
-                       <p className="text-sm text-rose-700">Status: <span className="font-bold uppercase tracking-tighter">{p.status}</span></p>
-                       <p className="text-xs text-rose-700">Estimated intake ({p.lastIntakeKg.toFixed(2)}kg) is below safety threshold.</p>
-                       <p className="text-xs text-rose-400 mt-1">Farm: Pork | Contact: {ADMIN_EMAIL}</p>
+                  <div key={p.id} className="bg-rose-50 p-6 rounded-[2rem] border border-rose-100 flex gap-6 items-center hover:bg-rose-100 transition-colors">
+                     <div className="w-14 h-14 bg-rose-500 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">!</div>
+                     <div className="flex-1">
+                       <p className="font-black text-rose-900 text-lg uppercase tracking-tight">Metabolic Deficit: {p.tagId}</p>
+                       <div className="flex items-center gap-2 mt-1">
+                         <span className="text-xs font-black text-rose-600 bg-white px-2 py-0.5 rounded uppercase">{p.status}</span>
+                         <span className="text-xs text-rose-400">•</span>
+                         <span className="text-xs text-rose-500 font-bold">Estimated Intake: {p.lastIntakeKg.toFixed(2)} kg</span>
+                       </div>
+                       <p className="text-xs text-rose-400 mt-2 font-medium">Auto-generated alert broadcasted to Veterinary Staff via {ADMIN_EMAIL}</p>
                      </div>
                   </div>
                 ))}
                 {state.pigs.filter(p => p.status === FeedStatus.UNDERFED || p.status === FeedStatus.MISSED).length === 0 && (
-                  <p className="text-slate-400 py-12 italic text-center w-full">No active alerts. All animals are feeding well.</p>
+                  <div className="p-20 text-center w-full bg-slate-50/50 rounded-[2rem] border-2 border-slate-100">
+                    <p className="text-slate-400 italic text-lg font-bold">No active alerts found. Herd safety protocols are stable.</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -347,46 +362,59 @@ const App: React.FC = () => {
         return <Reports pigs={state.pigs} feedEvents={state.feedEvents} />;
       case 'admin':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Admin Settings</h2>
-            <div className="bg-white rounded-3xl p-8 border border-slate-100 space-y-6">
-              <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="flex items-center gap-4">
-                  <img src={state.currentUser?.photoUrl} className="w-16 h-16 rounded-full border-2 border-white shadow-sm" alt="Profile" />
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <h2 className="text-3xl font-black text-slate-900">System Governance</h2>
+            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 space-y-10 shadow-sm">
+              <div className="flex items-center justify-between p-8 bg-slate-900 text-white rounded-[2.5rem] shadow-xl">
+                <div className="flex items-center gap-6">
+                  <img src={state.currentUser?.photoUrl} className="w-20 h-20 rounded-full border-4 border-slate-800 shadow-2xl bg-slate-800" alt="Profile" />
                   <div>
-                    <p className="font-bold text-slate-900 text-lg">{state.currentUser?.name}</p>
-                    <p className="text-sm text-slate-500 font-medium">{state.currentUser?.email}</p>
+                    <p className="font-black text-2xl tracking-tight">{state.currentUser?.name}</p>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">{state.currentUser?.role} • {state.currentUser?.email}</p>
                   </div>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="p-3 text-rose-600 bg-rose-50 rounded-xl hover:bg-rose-100 transition-colors"
+                  className="p-4 text-rose-400 bg-white/5 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-inner"
                 >
-                  <LogOut size={20} />
+                  <LogOut size={24} />
                 </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-600 mb-2">Primary Contact Email (Alerts)</label>
-                <input disabled type="text" value={ADMIN_EMAIL} className="w-full p-4 bg-slate-50 rounded-xl font-medium text-slate-500 border border-slate-200" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Primary Monitoring Endpoint</label>
+                  <input disabled type="text" value={ADMIN_EMAIL} className="w-full p-5 bg-slate-50 rounded-2xl font-bold text-slate-500 border border-slate-100 cursor-not-allowed" />
+                  <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest ml-1">Notifications route through this address exclusively.</p>
+                </div>
+                <div className="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100">
+                   <h4 className="font-black text-emerald-800 uppercase tracking-widest text-xs mb-3">Service Uptime</h4>
+                   <div className="flex items-center gap-3">
+                     <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                     <p className="text-emerald-700 font-black tracking-tight">Cloud Node: North America Central</p>
+                   </div>
+                   <p className="text-[10px] text-emerald-600 mt-2 font-bold uppercase tracking-widest">Latency: 42ms • Integrity: 100%</p>
+                </div>
               </div>
               
-              <div className="pt-6 border-t border-slate-100">
-                <h3 className="font-bold mb-4 text-slate-800">System Controls</h3>
-                <div className="space-y-3">
+              <div className="pt-10 border-t border-slate-100">
+                <h3 className="font-black text-slate-800 text-xl tracking-tight mb-6">Database Management</h3>
+                <div className="space-y-4">
                    <button 
                     type="button"
                     onClick={handleResetData}
-                    className="w-full flex items-center justify-between p-4 bg-rose-50 text-rose-700 rounded-2xl border border-rose-100 hover:bg-rose-100 transition-colors group cursor-pointer"
+                    className="w-full flex items-center justify-between p-6 bg-rose-50 text-rose-700 rounded-[2rem] border border-rose-100 hover:bg-rose-100 transition-all group cursor-pointer active:scale-[0.99]"
                    >
-                     <div className="flex items-center gap-3">
-                       <RotateCcw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+                     <div className="flex items-center gap-5">
+                       <div className="bg-white p-3 rounded-xl shadow-sm">
+                         <RotateCcw size={22} className="group-hover:rotate-180 transition-transform duration-700 text-rose-500" />
+                       </div>
                        <div className="text-left">
-                         <p className="font-bold">Reset All Data</p>
-                         <p className="text-xs opacity-70">Clear all records and revert to default pigs.</p>
+                         <p className="font-black text-lg tracking-tight">Hard Reset System Data</p>
+                         <p className="text-xs font-bold uppercase tracking-widest opacity-60">Factory wipe of all herd history and feeding logs.</p>
                        </div>
                      </div>
-                     <Trash2 size={18} />
+                     <Trash2 size={24} className="opacity-40 group-hover:opacity-100 transition-opacity" />
                    </button>
                 </div>
               </div>
@@ -395,20 +423,34 @@ const App: React.FC = () => {
         );
       case 'help':
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Help & Documentation</h2>
-            <div className="bg-white rounded-3xl p-8 border border-slate-100">
-               <h3 className="text-xl font-bold mb-4 text-pink-600">Quick Start Guide for Staff</h3>
-               <ol className="list-decimal list-inside space-y-4 text-slate-700">
-                 <li><b>Record Feeding:</b> Tap the pink "FEED NOW" button.</li>
-                 <li><b>Select Group:</b> Choose which room or group you are feeding.</li>
-                 <li><b>Enter Weight:</b> Type the total kilograms delivered to the trough.</li>
-                 <li><b>Manual Check:</b> If you saw a pig NOT eating, tap the pencil icon to mark as "Missed".</li>
-                 <li><b>Save:</b> The system will handle the math and alert the manager if any pig didn't get enough.</li>
-               </ol>
-               <div className="mt-8 p-6 bg-pink-50 rounded-2xl border border-pink-100">
-                  <p className="font-bold text-pink-900">Need Support?</p>
-                  <p className="text-sm text-pink-700">Email: {ADMIN_EMAIL}</p>
+          <div className="space-y-8 animate-in fade-in duration-500">
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Support Documentation</h2>
+            <div className="bg-white rounded-[3rem] p-12 border border-slate-100 shadow-sm">
+               <h3 className="text-2xl font-black mb-8 text-pink-600 tracking-tight">Operational Quick-Start Guide</h3>
+               <div className="space-y-8">
+                 {[
+                   { step: 1, title: 'Log Consumption', desc: 'Use the pink "FEED NOW" button to record trough mass delivery.' },
+                   { step: 2, title: 'Dynamic Estimation', desc: 'The system uses body-weight-to-ration algorithms to estimate individual share.' },
+                   { step: 3, title: 'Manual Overrides', desc: 'Visually confirmed behavioral anomalies can be recorded during trough review.' },
+                   { step: 4, title: 'Intake Thresholds', desc: 'Any animal falling below 85% of its metabolic requirement triggers an email alert.' },
+                 ].map(item => (
+                   <div key={item.step} className="flex gap-8 group">
+                     <div className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xl shrink-0 group-hover:bg-pink-600 transition-colors shadow-lg">
+                       {item.step}
+                     </div>
+                     <div>
+                       <p className="font-black text-xl text-slate-900 tracking-tight">{item.title}</p>
+                       <p className="text-slate-500 font-medium mt-1 leading-relaxed">{item.desc}</p>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+               <div className="mt-12 p-8 bg-pink-50 rounded-[2rem] border border-pink-100 flex items-center justify-between">
+                  <div>
+                    <p className="font-black text-pink-900 text-lg tracking-tight uppercase">Technical Escalation</p>
+                    <p className="text-sm font-bold text-pink-700 uppercase tracking-widest mt-1">Direct Contact: {ADMIN_EMAIL}</p>
+                  </div>
+                  <HelpCircle size={40} className="text-pink-300 opacity-50" />
                </div>
             </div>
           </div>

@@ -18,17 +18,14 @@ export const getNutritionAdvice = async (pigs: Pig[]) => {
   const groups = Array.from(new Set(pigs.map(p => p.group))).join(', ');
 
   const prompt = `
-    Context: You are a professional livestock nutritionist analyzing a pig farm's current data.
-    
-    Herd Data:
-    - Total Population: ${pigs.length} animals
-    - Underfeeding Incident Rate: ${((underfedCount / pigs.length) * 100).toFixed(1)}% (${underfedCount} pigs)
-    - Average Body Weight: ${avgWeight.toFixed(2)} kg
-    - Active Management Groups: ${groups}
+    Analyze this livestock herd profile:
+    - Population: ${pigs.length} animals
+    - Underfeeding Rate: ${((underfedCount / pigs.length) * 100).toFixed(1)}%
+    - Avg Weight: ${avgWeight.toFixed(2)} kg
+    - Active Groups: ${groups}
 
-    Task: Provide exactly 3 high-impact, actionable management tips to optimize feed conversion ratios (FCR) and reduce waste in group-feeding troughs. 
-    Focus on behavioral monitoring, formulation adjustments, or environment calibration.
-    Format your response as a bulleted list using standard markdown (* Item). Use bold text (**text**) for key terms.
+    Provide 3 concise, high-impact management tips. 
+    Format using markdown bullet points (* Item) and use **bold** for key terms.
   `;
 
   try {
@@ -36,14 +33,15 @@ export const getNutritionAdvice = async (pigs: Pig[]) => {
       model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
-        temperature: 0.7,
-        topP: 0.95,
+        systemInstruction: "You are an expert livestock nutritionist and farm systems engineer. You specialize in maximizing Feed Conversion Ratios (FCR) and herd health through precision nutrition.",
+        temperature: 0.75,
+        topP: 0.9,
       }
     });
     
-    return response.text || "Ensure regular weighing and check for trough dominance issues.";
+    return response.text || "Ensure regular trough cleaning and check for competition among Growers.";
   } catch (error) {
     console.error("Gemini advice error:", error);
-    return "System offline. Recommended: Perform manual inspection of trough distribution and verify metabolic requirements for the **Grower** group.";
+    return "Insights temporarily unavailable. Manual check recommended for: **Trough Distribution Efficiency** and **Group Ration Accuracy**.";
   }
 };
