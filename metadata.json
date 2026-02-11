@@ -1,0 +1,7 @@
+{
+  "name": "Liveshock — Nutrition & Feed Management",
+  "description": "A specialized management system for pig farms to track individual nutrition in group feeding environments using smart estimation and manual overrides.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
